@@ -7,4 +7,5 @@ function dNdxi = quadratic_line_reference_shape_gradients(xi)
     if ~all(size(xi) == 1)
         error("xi must be 1x1")
     end
+    dNdxi = [xi-0.5 , xi+0.5 , -2*xi];
 end

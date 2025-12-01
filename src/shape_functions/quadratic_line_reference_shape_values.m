@@ -6,4 +6,6 @@ function N = quadratic_line_reference_shape_values(xi)
     if ~all(size(xi) == 1)
         error("xi must be 1x1")
     end
+
+    N = [xi*(xi-1)/2,xi*(xi+1)/2,1-xi*xi];
 end
