@@ -14,4 +14,6 @@ function J = calculate_jacobian(dN_dxi, element_coordinates)
     elseif size(dN_dxi, 2) ~= size(element_coordinates, 2)
         error("number of shape functions must match the number of element coordinates")
     end
+
+     J = element_coordinates * dN_dxi';
 end
