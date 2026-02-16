@@ -13,7 +13,6 @@ function [weights, points] = triangle_quadrature(nquadpoints)
             points  = [1/3; 1/3];
 
         case 3
-            % Three-point rule, symmetric
             weights = (1/6) * [1, 1, 1];  % area =1/2, 1/6 * 3
             points = [ ...
                 1/6, 2/3, 1/6;   % xi1

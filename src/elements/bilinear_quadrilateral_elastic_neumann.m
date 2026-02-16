@@ -22,4 +22,36 @@ function fe = bilinear_quadrilateral_elastic_neumann(t, tn, coords, facetnr, nqu
     elseif ~isscalar(nquadpoints)
         error("nquadpoints must be a scalar integer")
     end
+     % Quadrature rule on reference line
+    [weights, points] = line_quadrature(nquadpoints);
+
+    fe = zeros(8,1);  % 2 DOFs × 4 nodes
+
+    for q = 1:length(weights)
+        xi_line = points(:,q);
+        w = weights(q);
+
+        % Map to reference quadrilateral facet
+        xi = quadrilateral_facet_coords(xi_line, facetnr);
+
+        % Shape functions
+        N = bilinear_quadrilateral_reference_shape_values(xi);
+        dN_dxi = bilinear_quadrilateral_reference_shape_gradients(xi);
+
+        % Jacobian
+        J = calculate_jacobian(dN_dxi, coords);
+
+        % Vector-valued shape function matrix
+        M = vectorize_shape_values(N, 2);
+
+        % Weighted outward normal
+        nw = quadrilateral_facet_weighted_normal(J, facetnr);
+        nhat = nw / norm(nw);
+
+        % Total traction (constant)
+        t_total = t + tn * nhat;
+
+        % Assemble contribution
+        fe = fe + M' * t_total * norm(nw) * w;
+    end
 end

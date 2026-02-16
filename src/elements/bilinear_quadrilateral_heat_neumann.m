@@ -9,60 +9,30 @@ function fe = bilinear_quadrilateral_heat_neumann(qn, coords, facetnr, nquadpoin
 %        nquadpoints - Number of quadrature points to use for numerical
 %                      integration
 % Output: fe [4x1]   - Local element load vector contribution
-    fe = zeros(4,1);
-
-    % Facet base on sheet
-    edge_nodes = [1 2;
-                  2 3;
-                  3 4;
-                  4 1];
-    % select two nodes, [1x2], and its node index
-    en = edge_nodes(facetnr, :);   
-
     [weights, points] = line_quadrature(nquadpoints);
-    for q = 1:nquadpoints
-        s = points(q);     % s[-1,1] on an edge
+
+    fe = zeros(4,1);  % 1 DOF × 4 nodes
+
+    for q = 1:length(weights)
+        xi_line = points(:,q);   % scalar for 1D line quadrature
         w = weights(q);
 
-        % Determine (ξ1, ξ2) on the chosen facet
-        % and the direction of derivative wrt s
-        switch facetnr
-            case 1     % bottom edge: ξ2 = -1, ξ1 = s
-                xi  = [s; -1];
-                % dN_dxi [2x4]
-                dN_dxi = bilinear_quadrilateral_reference_shape_gradients(xi);
-                % coord [2x4]
-                J = calculate_jacobian(dN_dxi, coords);
-                % J [2x2]
-                dxds = J(:,1);  % derivative wrt ξ1 [dx1/dxi1; dx2/dxi1] [2x1]
+        % Map 1D line point to 2D reference quad facet coordinate
+        xi = quadrilateral_facet_coords(xi_line, facetnr);
 
-            case 2     % right edge: ξ1 = 1, ξ2 = s
-                xi  = [1; s];
-                dN_dxi = bilinear_quadrilateral_reference_shape_gradients(xi);
-                J = calculate_jacobian(dN_dxi, coords);
-                dxds = J(:,2);  % derivative wrt ξ2
+        % Shape functions and gradients on reference quad
+        N = bilinear_quadrilateral_reference_shape_values(xi);
+        dN_dxi = bilinear_quadrilateral_reference_shape_gradients(xi);
 
-            case 3     % top edge: ξ2 = 1, ξ1 = s
-                xi  = [s; 1];
-                dN_dxi = bilinear_quadrilateral_reference_shape_gradients(xi);
-                J = calculate_jacobian(dN_dxi, coords);
-                dxds = J(:,1);
+        % Jacobian (2x2)
+        J = calculate_jacobian(dN_dxi, coords);
 
-            case 4     % left edge: ξ1 = -1, ξ2 = s
-                xi  = [-1; s];
-                dN_dxi = bilinear_quadrilateral_reference_shape_gradients(xi);
-                J = calculate_jacobian(dN_dxi, coords);
-                dxds = J(:,2);
-        end
+        % Edge weighted normal (magnitude equals edge Jacobian scaling)
+        nw = quadrilateral_facet_weighted_normal(J, facetnr);
 
-        % physical edge Jacobian = |dx/ds|
-        Jedge = norm(dxds);
-
-        % shape functions at this edge point
-        N = bilinear_quadrilateral_reference_shape_values(xi);   % [1×4]
-        % [N1(xi) N2(xi) N3(xi) N4(xi)]
-
-        % update only the two nodes on this facet
-        fe(en) = fe(en) - (N(en)' * (qn * Jedge * w));
+        % Boundary integral contribution:
+        % fe_i += ∫_facet N_i * qn ds
+        %      ≈ Σ N_i(xi_q) * qn * |nw| * w_q
+        fe = fe + N' * qn * norm(nw) * w;
     end
 end

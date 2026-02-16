@@ -25,27 +25,16 @@ function [Ke, fe] = linear_triangle_heat_element(D, b, coords, nquadpoints)
     for q = 1:nquadpoints
         xi  = points(:,q);   % xi = [xi1; xi2]  (2x1)
         w   = weights(q);
-
-        N = linear_triangle_reference_shape_values(xi);         % [1x3]
+      
         dN_dxi = linear_triangle_reference_shape_gradients(xi); % [2x3]
-
-        % --- Jacobian from reference triangle → physical triangle
         % coords is [2x3], dN_dxi is [2x3]
         J = calculate_jacobian(dN_dxi, coords);   % Should return [2x2]
-
         % Determinant for area scaling
         detJ = det(J);
-
-        % --- Map shape function gradients to physical space
-        % ∇N = J^{-T} * (∂N/∂ξ)
-        dN_dx = J'\dN_dxi;     % (2x2)' backslash (2x3) => (2x3)
-
-        % --- Stiffness contribution
-        % Ke_ij += (∇N_i)^T * D * (∇N_j) * detJ * w
+        dN_dx = J'\dN_dxi;    
         Ke = Ke + (dN_dx' * D * dN_dx) * detJ * w;
 
-        % --- Load vector (source term)
-        % fe_i += N_i * b * detJ * w
+        N = linear_triangle_reference_shape_values(xi);         % [1x3]
         fe = fe + (N' * b) * detJ * w;
     end
 end

@@ -21,10 +21,8 @@ function q = linear_triangle_heat_flux(D, coords, ae, nquadpoints)
         % Jacobian
         J = calculate_jacobian(dN_dxi, coords);   % [2×2]
 
-        % physical gradients: grad(N) = J^{-T} * dN_dxi
         dN_dx = J' \ dN_dxi;    % gives 2×3
 
-        % Compute temperature gradient
         gradT = dN_dx * ae;     % [2×1]
 
         % Heat flux q = -D grad(T)

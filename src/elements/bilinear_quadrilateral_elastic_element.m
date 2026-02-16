@@ -13,4 +13,6 @@ function [Ke, fe] = bilinear_quadrilateral_elastic_element(D, b, coords, nquadpo
 % Outputs
 % * Ke: [8,8] - the element stiffness matrix
 % * fe: [8,1] - the element load vector (due to heat source)
+Ke  =zeros(8,8);
+fe = zeros(8,1);
 end

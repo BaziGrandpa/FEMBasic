@@ -22,4 +22,26 @@ function fe = linear_triangle_elastic_neumann(t, tn, coords, facetnr, nquadpoint
     elseif ~isscalar(nquadpoints)
         error("nquadpoints must be a scalar integer")
     end
+
+    [weights, points] = line_quadrature(nquadpoints);
+    fe = zeros(6,1);
+    for i=1:length(weights)
+        xi_line = points(i);
+        xi_tri = triangle_facet_coords(xi_line, facetnr);%[2x1]
+        wi = weights(i);
+        N_xi = linear_triangle_reference_shape_values(xi_tri);%[1x3]
+        Me = vectorize_shape_values(N_xi,2);%[2x6]
+
+        %traction
+        dN_dxi = linear_triangle_reference_shape_gradients(xi_tri);
+        J = calculate_jacobian(dN_dxi,coords);
+        nw = triangle_facet_weighted_normal(J,facetnr);
+        nhat = nw/norm(nw);
+        t_total = t+ tn*nhat;%[2x1]
+
+        fe = fe + Me'*t_total*norm(nw)*wi;
+    end
+    
+        
+    
 end
